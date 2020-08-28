@@ -184,5 +184,25 @@ int main(int argc, char const *argv[])
     printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_euler_avx_unroll(N)));
 #endif
 
+#if defined(RAMANUJAN)
+    // Baseline
+    clock_gettime(CLOCK_ID, &start);
+    for (i = 0; i < loop; i++) {
+        compute_pi_ramanujan(N);
+    }
+    clock_gettime(CLOCK_ID, &end);
+    printf("%lf ", (double) (end.tv_sec - start.tv_sec) +
+                       (end.tv_nsec - start.tv_nsec) / ONE_SEC);
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_ramanujan(N)));
+
+    // OpenMP with 2 threads
+
+    // OpenMP with 4 threads
+
+    // AVX SIMD
+
+    // AVX SIMD + Loop unrolling
+#endif
+
     return 0;
 }

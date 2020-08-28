@@ -22,8 +22,11 @@ int main(int argc, char const *argv[])
     // Leibniz
     printf("%lf ", COMPUTE_PI_ERROR(compute_pi_leibniz(N)));
 
-    // Baseline
+    // Euler
     printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_euler(N)));
+
+    // Ramanujan
+    printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_ramanujan(N)));
 
     return 0;
 }

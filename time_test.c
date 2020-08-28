@@ -65,6 +65,11 @@ int main(int argc, char const *argv[])
 #if defined(EULER_AVXUNROLL)
     pi = compute_pi_leibniz_avx_unroll(N);
 #endif
+
+#if defined(RAMANUJAN)
+    pi = compute_pi_ramanujan(N);
+#endif
+
     printf("N = %d , pi = %lf\n", N, pi);
 
     return 0;

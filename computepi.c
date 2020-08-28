@@ -317,3 +317,22 @@ double compute_pi_euler_avx_unroll(size_t N)
           tmp4[2] + tmp4[3];
     return sqrt(pi);
 }
+
+double compute_pi_ramanujan(size_t N)
+{
+    N = N > 40 ? 40 : N;
+    double pi = 1103.0;
+    long long tmp1 = 1, tmp2 = 1, tmp3 = 1103;
+    long long c = 24591257860;
+    double prev = 1.0;
+
+    for (size_t i = 1; i < N; i++) {
+        tmp1 = 4 * i;
+        tmp2 = i * i * i * i;
+        tmp3 += 26390;
+        prev *=
+            (double) (tmp1 * (tmp1 - 1) * (tmp1 - 2) * (tmp1 - 3)) / c / tmp2;
+        pi += prev * tmp3;
+    }
+    return 9801.0 / sqrt(8.0) / pi;
+}
