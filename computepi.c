@@ -3,6 +3,8 @@
 #include <math.h>
 #include <omp.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 double compute_pi_baseline(size_t N)
 {
@@ -335,4 +337,19 @@ double compute_pi_ramanujan(size_t N)
         pi += prev * tmp3;
     }
     return 9801.0 / sqrt(8.0) / pi;
+}
+
+double compute_pi_mc(size_t N)
+{
+    srand(time(NULL));
+    unsigned count = 0;
+    double x, y;
+
+    for (size_t i = 0; i < N; i++) {
+        x = (double) rand() / (RAND_MAX + 1.0);
+        y = (double) rand() / (RAND_MAX + 1.0);
+        if (x * x + y * y < 1.0)
+            count++;
+    }
+    return (double) count * 4.0 / N;
 }

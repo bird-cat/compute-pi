@@ -23,10 +23,13 @@ int main(int argc, char const *argv[])
     printf("%lf ", COMPUTE_PI_ERROR(compute_pi_leibniz(N)));
 
     // Euler
-    printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_euler(N)));
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_euler(N)));
 
     // Ramanujan
-    printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_ramanujan(N)));
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_ramanujan(N)));
+
+    // Monte Carlo
+    printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_mc(N)));
 
     return 0;
 }

@@ -8,6 +8,7 @@ EXECUTABLE = \
 	time_test_euler time_test_euler_openmp_2 time_test_euler_openmp_4 \
 	time_test_euler_avx time_test_euler_avxunroll \
 	time_test_ramanujan \
+	time_test_mc \
 	benchmark_clock_gettime methods_error_rate
 
 GIT_HOOKS := .git/hooks/applied
@@ -54,6 +55,7 @@ check: default
 	time ./time_test_euler_avx
 	time ./time_test_euler_avxunroll
 	time ./time_test_ramanujan
+	time ./time_test_mc
 
 gencsv: default
 	for i in `seq 1008 4000 1000000`; do \

@@ -16,3 +16,5 @@ double compute_pi_euler_avx(size_t N);
 double compute_pi_euler_avx_unroll(size_t N);
 
 double compute_pi_ramanujan(size_t N);
+
+double compute_pi_mc(size_t N);

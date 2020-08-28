@@ -70,6 +70,9 @@ int main(int argc, char const *argv[])
     pi = compute_pi_ramanujan(N);
 #endif
 
+#if defined(MONTE_CARLO)
+    pi = compute_pi_mc(N);
+#endif
     printf("N = %d , pi = %lf\n", N, pi);
 
     return 0;
