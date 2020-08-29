@@ -204,7 +204,7 @@ int main(int argc, char const *argv[])
     // AVX SIMD + Loop unrolling
 #endif
 
-#if defined(MONTE_CARLO)
+#if defined(MC)
     // Baseline
     clock_gettime(CLOCK_ID, &start);
     for (i = 0; i < loop; i++) {
@@ -213,15 +213,47 @@ int main(int argc, char const *argv[])
     clock_gettime(CLOCK_ID, &end);
     printf("%lf ", (double) (end.tv_sec - start.tv_sec) +
                        (end.tv_nsec - start.tv_nsec) / ONE_SEC);
-    printf("%lf\n", COMPUTE_PI_ERROR(mc(N))); /* FIXME: remove \n */
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_mc(N)));
 
     // OpenMP with 2 threads
+    clock_gettime(CLOCK_ID, &start);
+    for (i = 0; i < loop; i++) {
+        compute_pi_mc_openmp(N, 2);
+    }
+    clock_gettime(CLOCK_ID, &end);
+    printf("%lf ", (double) (end.tv_sec - start.tv_sec) +
+                       (end.tv_nsec - start.tv_nsec) / ONE_SEC);
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_mc_openmp(N, 2)));
 
     // OpenMP with 4 threads
+    clock_gettime(CLOCK_ID, &start);
+    for (i = 0; i < loop; i++) {
+        compute_pi_mc_openmp(N, 4);
+    }
+    clock_gettime(CLOCK_ID, &end);
+    printf("%lf ", (double) (end.tv_sec - start.tv_sec) +
+                       (end.tv_nsec - start.tv_nsec) / ONE_SEC);
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_mc_openmp(N, 4)));
 
     // AVX SIMD
+    clock_gettime(CLOCK_ID, &start);
+    for (i = 0; i < loop; i++) {
+        compute_pi_mc_avx(N);
+    }
+    clock_gettime(CLOCK_ID, &end);
+    printf("%lf ", (double) (end.tv_sec - start.tv_sec) +
+                       (end.tv_nsec - start.tv_nsec) / ONE_SEC);
+    printf("%lf ", COMPUTE_PI_ERROR(compute_pi_mc_avx(N)));
 
     // AVX SIMD + Loop unrolling
+    clock_gettime(CLOCK_ID, &start);
+    for (i = 0; i < loop; i++) {
+        compute_pi_mc_avx_unroll(N);
+    }
+    clock_gettime(CLOCK_ID, &end);
+    printf("%lf ", (double) (end.tv_sec - start.tv_sec) +
+                       (end.tv_nsec - start.tv_nsec) / ONE_SEC);
+    printf("%lf\n", COMPUTE_PI_ERROR(compute_pi_mc_avx_unroll(N)));
 #endif
 
     return 0;

@@ -70,8 +70,24 @@ int main(int argc, char const *argv[])
     pi = compute_pi_ramanujan(N);
 #endif
 
-#if defined(MONTE_CARLO)
+#if defined(MC)
     pi = compute_pi_mc(N);
+#endif
+
+#if defined(MC_OPENMP_2)
+    pi = compute_pi_mc_openmp(N, 2);
+#endif
+
+#if defined(MC_OPENMP_4)
+    pi = compute_pi_mc_openmp(N, 4);
+#endif
+
+#if defined(MC_AVX)
+    pi = compute_pi_mc_avx(N);
+#endif
+
+#if defined(MC_AVXUNROLL)
+    pi = compute_pi_mc_avx_unroll(N);
 #endif
     printf("N = %d , pi = %lf\n", N, pi);
 

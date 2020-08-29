@@ -339,6 +339,12 @@ double compute_pi_ramanujan(size_t N)
     return 9801.0 / sqrt(8.0) / pi;
 }
 
+#define rand01() \
+    ((double) rand() / (RAND_MAX + 1.0))  // generate random double in [0, 1)
+
+#define rand01_r() \
+    ((double) rand_r(&seed) / (RAND_MAX + 1.0))  // thread-safe rand01()
+
 double compute_pi_mc(size_t N)
 {
     srand(time(NULL));
@@ -346,10 +352,132 @@ double compute_pi_mc(size_t N)
     double x, y;
 
     for (size_t i = 0; i < N; i++) {
-        x = (double) rand() / (RAND_MAX + 1.0);
-        y = (double) rand() / (RAND_MAX + 1.0);
+        x = rand01();
+        y = rand01();
         if (x * x + y * y < 1.0)
             count++;
     }
     return (double) count * 4.0 / N;
+}
+
+double compute_pi_mc_openmp(size_t N, int threads)
+{
+    unsigned count = 0;
+    double x, y;
+
+#pragma omp parallel num_threads(threads) private(x, y) reduction(+ : count)
+    {
+        unsigned seed = time(NULL) * omp_get_thread_num();
+        struct drand48_data randBuffer;
+        srand48_r(seed, &randBuffer);
+#pragma omp for
+        for (size_t i = 0; i < N; i++) {
+            drand48_r(&randBuffer, &x);
+            drand48_r(&randBuffer, &y);
+            if (x * x + y * y < 1.0)
+                count++;
+        }
+    }
+    return (double) count * 4.0 / N;
+}
+
+double compute_pi_mc_avx(size_t N)
+{
+    unsigned seed = time(NULL);
+    register __m256d ymm0, ymm1, ymm2, ymm3;
+    ymm2 = _mm256_set1_pd(1.0);
+    ymm3 = _mm256_setzero_pd();
+
+    for (size_t i = 0; i <= N - 4; i += 4) {
+        // x = rand(0, 1), y = rand(0, 1)
+        ymm0 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm1 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+
+        // x * x, y * y
+        ymm0 = _mm256_mul_pd(ymm0, ymm0);
+        ymm1 = _mm256_mul_pd(ymm1, ymm1);
+
+        // x ^ 2 + y ^ 2
+        ymm0 = _mm256_add_pd(ymm0, ymm1);
+
+        // if (x ^ 2 + y ^ 2 < 1.0)
+        ymm1 = _mm256_cmp_pd(ymm0, ymm2, _CMP_LT_OQ);
+        ymm0 = _mm256_and_pd(ymm1, ymm2);
+        ymm3 = _mm256_add_pd(ymm0, ymm3);
+    }
+
+    double tmp[4] __attribute__((aligned(32)));
+    _mm256_store_pd(tmp, ymm3);
+    return (tmp[0] + tmp[1] + tmp[2] + tmp[3]) * 4.0 / (N - 3);
+}
+
+double compute_pi_mc_avx_unroll(size_t N)
+{
+    unsigned seed = time(NULL);
+    register __m256d ymm0, ymm1, ymm2, ymm3, ymm4, ymm5, ymm6, ymm7, ymm8, ymm9,
+        ymm10, ymm11, ymm12;
+    ymm8 = _mm256_set1_pd(1.0);
+    ymm9 = _mm256_setzero_pd();
+    ymm10 = _mm256_setzero_pd();
+    ymm11 = _mm256_setzero_pd();
+    ymm12 = _mm256_setzero_pd();
+
+    for (size_t i = 0; i <= N - 16; i += 16) {
+        // x = rand([0, 1)), y = rand([0, 1))
+        ymm0 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm1 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm2 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm3 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm4 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm5 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm6 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+        ymm7 = _mm256_set_pd(rand01_r(), rand01_r(), rand01_r(), rand01_r());
+
+        // x * x,  y * y
+        ymm0 = _mm256_mul_pd(ymm0, ymm0);
+        ymm1 = _mm256_mul_pd(ymm1, ymm1);
+        ymm2 = _mm256_mul_pd(ymm2, ymm2);
+        ymm3 = _mm256_mul_pd(ymm3, ymm3);
+        ymm4 = _mm256_mul_pd(ymm4, ymm4);
+        ymm5 = _mm256_mul_pd(ymm5, ymm5);
+        ymm6 = _mm256_mul_pd(ymm6, ymm6);
+        ymm7 = _mm256_mul_pd(ymm7, ymm7);
+
+        // x ^ 2 + y ^ 2
+        ymm0 = _mm256_add_pd(ymm0, ymm1);
+        ymm1 = _mm256_add_pd(ymm2, ymm3);
+        ymm2 = _mm256_add_pd(ymm4, ymm5);
+        ymm3 = _mm256_add_pd(ymm6, ymm7);
+
+        // if (x ^ 2 + y ^ 2 < 1.0)
+        ymm0 = _mm256_cmp_pd(ymm0, ymm8, _CMP_LT_OQ);
+        ymm1 = _mm256_cmp_pd(ymm1, ymm8, _CMP_LT_OQ);
+        ymm2 = _mm256_cmp_pd(ymm2, ymm8, _CMP_LT_OQ);
+        ymm3 = _mm256_cmp_pd(ymm3, ymm8, _CMP_LT_OQ);
+
+        ymm0 = _mm256_and_pd(ymm0, ymm8);
+        ymm1 = _mm256_and_pd(ymm1, ymm8);
+        ymm2 = _mm256_and_pd(ymm2, ymm8);
+        ymm3 = _mm256_and_pd(ymm3, ymm8);
+
+        ymm9 = _mm256_add_pd(ymm0, ymm9);
+        ymm10 = _mm256_add_pd(ymm1, ymm10);
+        ymm11 = _mm256_add_pd(ymm2, ymm11);
+        ymm12 = _mm256_add_pd(ymm3, ymm12);
+    }
+
+    double tmp1[4] __attribute__((aligned(32)));
+    double tmp2[4] __attribute__((aligned(32)));
+    double tmp3[4] __attribute__((aligned(32)));
+    double tmp4[4] __attribute__((aligned(32)));
+
+    _mm256_store_pd(tmp1, ymm9);
+    _mm256_store_pd(tmp2, ymm10);
+    _mm256_store_pd(tmp3, ymm11);
+    _mm256_store_pd(tmp4, ymm12);
+
+    return (tmp1[0] + tmp1[1] + tmp1[2] + tmp1[3] + tmp2[0] + tmp2[1] +
+            tmp2[2] + tmp2[3] + tmp3[0] + tmp3[1] + tmp3[2] + tmp3[3] +
+            tmp4[0] + tmp4[1] + tmp4[2] + tmp4[3]) *
+           4.0 / (N - 15);
 }

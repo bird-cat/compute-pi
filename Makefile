@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O0 -std=gnu99 -Wall -fopenmp -mavx
+CFLAGS = -O0 -std=gnu99 -Wall -fopenmp -mavx -g
 EXECUTABLE = \
 	time_test_baseline time_test_openmp_2 time_test_openmp_4 \
 	time_test_avx time_test_avxunroll \
@@ -8,12 +8,13 @@ EXECUTABLE = \
 	time_test_euler time_test_euler_openmp_2 time_test_euler_openmp_4 \
 	time_test_euler_avx time_test_euler_avxunroll \
 	time_test_ramanujan \
-	time_test_mc \
+	time_test_mc time_test_mc_openmp_2 time_test_mc_openmp_4 \
+	time_test_mc_avx time_test_mc_avxunroll \
 	benchmark_clock_gettime methods_error_rate
 
 GIT_HOOKS := .git/hooks/applied
 
-METHOD ?= BASELINE
+METHOD ?= MC
 
 $(GIT_HOOKS):
 	@scripts/install-git-hooks
@@ -56,6 +57,10 @@ check: default
 	time ./time_test_euler_avxunroll
 	time ./time_test_ramanujan
 	time ./time_test_mc
+	time ./time_test_mc_openmp_2
+	time ./time_test_mc_openmp_4
+	time ./time_test_mc_avx
+	time ./time_test_mc_avxunroll
 
 gencsv: default
 	for i in `seq 1008 4000 1000000`; do \
