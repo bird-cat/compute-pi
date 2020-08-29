@@ -365,12 +365,13 @@ double compute_pi_mc_openmp(size_t N, int threads)
     unsigned count = 0;
     double x, y;
 
-#pragma omp parallel num_threads(threads) private(x, y) reduction(+ : count)
+#pragma omp parallel num_threads(threads) private(x, y)
     {
         unsigned seed = time(NULL) * omp_get_thread_num();
         struct drand48_data randBuffer;
         srand48_r(seed, &randBuffer);
-#pragma omp for
+
+#pragma omp for reductiion(+ : count)
         for (size_t i = 0; i < N; i++) {
             drand48_r(&randBuffer, &x);
             drand48_r(&randBuffer, &y);
